@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"os/signal"
 	"syscall"
@@ -13,6 +14,8 @@ import (
 )
 
 type Config struct {
+	Host string `env:"HOST, default=0.0.0.0:11434"`
+
 	Models []string `env:"MODEL"`
 }
 
@@ -20,20 +23,17 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	//wd, _ := os.Getwd()
-	//path := filepath.Join(wd, "data")
-
 	var c Config
 	envconfig.MustProcess(ctx, &c)
 
 	client, _ := ollama.ClientFromEnvironment()
 
 	server := exec.CommandContext(ctx, "ollama", "serve")
-	// server.Env = []string{
-	// 	"HOME=" + path,
-	// 	"OLLAMA_HOST=127.0.0.1:11434",
-	// 	"OLLAMA_FLASH_ATTENTION=1",
-	// }
+	server.Env = []string{
+		"HOME=" + dirHome(),
+		"OLLAMA_HOST=" + c.Host,
+		"OLLAMA_FLASH_ATTENTION=1",
+	}
 
 	//server.Stdout = os.Stdout
 	//server.Stderr = os.Stderr
@@ -55,6 +55,18 @@ func main() {
 	if err := server.Run(); err != nil {
 		panic(err)
 	}
+}
+
+func dirHome() string {
+	if dir, err := os.UserHomeDir(); err == nil {
+		return dir
+	}
+
+	if dir, err := os.Getwd(); err == nil {
+		return dir
+	}
+
+	panic("could not determine home directory")
 }
 
 func waitUntilReady(ctx context.Context, client *ollama.Client) error {
