@@ -11,7 +11,7 @@ COPY *.go ./
 RUN CGO_ENABLED=0 GOOS=linux go build -o launcher
 
 
-FROM ollama/ollama:0.3.2
+FROM ollama/ollama:0.3.3
 
 RUN apt-get update && apt-get install -y \
   tini \
