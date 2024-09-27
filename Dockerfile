@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM golang:1 AS build
+FROM golang:1-alpine AS build
 
 WORKDIR /src
 
@@ -8,16 +8,11 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY *.go ./
-RUN CGO_ENABLED=0 GOOS=linux go build -o launcher
+RUN CGO_ENABLED=0 GOOS=linux go build -o operator
 
 
-FROM ollama/ollama:0.3.11
+FROM alpine
 
-RUN apt-get update && apt-get install -y \
-  tini \
-  && rm -rf /var/lib/apt/lists/*
+COPY --from=build /src/operator /operator
 
-COPY --from=build /src/launcher /usr/bin/launcher
-
-ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["/usr/bin/launcher"]
+CMD ["/operator"]

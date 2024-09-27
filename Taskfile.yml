@@ -3,7 +3,7 @@
 version: "3"
 
 vars:
-  REPOSITORY: ghcr.io/adrianliechti/ollama
+  REPOSITORY: ghcr.io/adrianliechti/ollama-companion
 
 tasks:
   publish:
